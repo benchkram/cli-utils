@@ -30,6 +30,7 @@ var rootCmd = &cobra.Command{
 
 // runRootJob is the actual job that is executed by the root command
 func runRootJob() (err error) {
+	// Print global config
 	GlobalConfig.Print()
 
 	// Create new app instance
@@ -38,7 +39,5 @@ func runRootJob() (err error) {
 		Commit:  CommitHash,
 	})
 
-	newApp.Start()
-
-	return err
+	return newApp.Start()
 }

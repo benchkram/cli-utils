@@ -46,6 +46,8 @@ type config struct {
 	// Profiling
 	CPUProfile bool `mapstructure:"cpuprofile" structs:"cpuprofile" env:"CPU_PROFILE"`
 	MEMProfile bool `mapstructure:"memprofile" structs:"memprofile" env:"MEM_PROFILE"`
+
+	SensitiveData string `mapstructure:"sensitive_data" structs:"sensitive_data" env:"SENSITIVE_DATA" conform:"redact"`
 }
 
 // cliFlags defines cli parameters for all config options
@@ -55,6 +57,9 @@ func cliFlags() {
 	// Profiling
 	rootCmd.PersistentFlags().Bool("cpuprofile", defaultConfig.CPUProfile, "write cpu profile to file")
 	rootCmd.PersistentFlags().Bool("memprofile", defaultConfig.MEMProfile, "write memory profile to file")
+
+	// Sensitive data
+	rootCmd.PersistentFlags().String("sensitive_data", defaultConfig.SensitiveData, "sensitive data")
 }
 
 // bindFlagsAndEnv will assign the environment variables to the cli parameters

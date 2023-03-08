@@ -68,7 +68,7 @@ var rootCmd = &cobra.Command{
     Short: "cli to start example server & client",
     Long:  "cli to start example server & client",
     PersistentPreRun: func(cmd *cobra.Command, args []string) {
-        // TODO: later in this post
+        // TODO: load config and initialize profiling
     },
     Run: func(cmd *cobra.Command, args []string) {
         // This is where your application starts
@@ -83,7 +83,6 @@ It supports configuration files, environment variables and command line paramete
 This allows usage in cli as well as in CI/CD pipelines with either config files or environment variables.
 
 We use cobra and viper to help us call an application with different modes or parameters.
-# TODO: add links to cobra and viper?
 Let's create a `config.go` file in the cli folder with a simple struct to hold our configuration:
 
 ```go
@@ -102,17 +101,11 @@ import (
 // `mapstructure` => viper tags
 // `struct` => fatih structs tag
 type config struct {
-    // Server config
-    Host string `mapstructure:"host" structs:"host"`
-    Port string `mapstructure:"port" structs:"port"`
-    
-    // Log
-    Verbosity int  `mapstructure:"verbosity" structs:"verbosity"`
-    Pretty    bool `mapstructure:"pretty" structs:"pretty"`
-    
-    // Profiling
-    CPUProfile bool `mapstructure:"cpuprofile" structs:"cpuprofile"`
-    MEMProfile bool `mapstructure:"memprofile" structs:"memprofile"`
+	// Profiling
+	CPUProfile bool `mapstructure:"cpuprofile" structs:"cpuprofile" env:"CPU_PROFILE"`
+	MEMProfile bool `mapstructure:"memprofile" structs:"memprofile" env:"MEM_PROFILE"`
+
+	SensitiveData string `mapstructure:"sensitive_data" structs:"sensitive_data" env:"SENSITIVE_DATA" conform:"redact"`
 }
 ```
 
@@ -126,14 +119,6 @@ This way we can use it to set default values for our parameters and to read a co
 ```go
 // defaultConfig holds default values for all config options
 var defaultConfig = config{
-    // Server
-    Host: "localhost",
-    Port: "8080",
-    
-    // Log
-    Verbosity: 5,
-    Pretty:    false,
-    
     // Profiling
     CPUProfile: false,
     MEMProfile: false,
@@ -147,54 +132,31 @@ First the parameters:
 // cliFlags defines cli parameters for all config options
 func cliFlags() {
     // Keep cli parameters in sync with the config struct
-    
-    // Server
-    rootCmd.PersistentFlags().String("host", defaultConfig.Host, "hostname to listen to")
-    rootCmd.PersistentFlags().String("port", defaultConfig.Port, "port to listen to")
-    
-    // Log
-    rootCmd.PersistentFlags().Int("verbosity", defaultConfig.Verbosity, "verbosity level from quiet to verbose (0-10)")
-    rootCmd.PersistentFlags().Bool("pretty", defaultConfig.Pretty, "log pretty instead of json")
-    
+	
     // Profiling
     rootCmd.PersistentFlags().Bool("cpuprofile", defaultConfig.CPUProfile, "write cpu profile to file")
     rootCmd.PersistentFlags().Bool("memprofile", defaultConfig.MEMProfile, "write memory profile to file")
+
+    // Sensitive data
+    rootCmd.PersistentFlags().String("sensitive_data", defaultConfig.SensitiveData, "sensitive data")
 }
 ```
 
 Then we use viper to bind environment variables to these parameters.
 
 ```go
-// bind will assign the environment variables to the cli parameters
-func bind() {
-    // Server
-    _ = viper.BindPFlag("host", rootCmd.PersistentFlags().Lookup("host"))
-    _ = viper.BindPFlag("port", rootCmd.PersistentFlags().Lookup("port"))
-    
-    // Log
-    _ = viper.BindPFlag("verbosity", rootCmd.PersistentFlags().Lookup("verbosity"))
-    _ = viper.BindPFlag("pretty", rootCmd.PersistentFlags().Lookup("pretty"))
-    
-    // Profiling
-    _ = viper.BindPFlag("cpuprofile", rootCmd.PersistentFlags().Lookup("cpuprofile"))
-    _ = viper.BindPFlag("memprofile", rootCmd.PersistentFlags().Lookup("memprofile"))
-}
 
-// env create environment vars for all config options
-func env() {
-    // Typically we use capital letters for env vars
-    
-    // Server
-    _ = viper.BindEnv("host", "HOST")
-    _ = viper.BindEnv("port", "PORT")
-    
-    // Log
-    _ = viper.BindEnv("verbosity", "VERBOSITY")
-    _ = viper.BindEnv("pretty", "PRETTY")
-    
-    // Profiling
-    _ = viper.BindEnv("cpuprofile", "SUBSVC_CPU_PROFILE")
-    _ = viper.BindEnv("memprofile", "SUBSVC_MEM_PROFILE")
+// bindFlagsAndEnv will assign the environment variables to the cli parameters
+func bindFlagsAndEnv() {
+    for _, field := range structs.Fields(&config{}) {
+        // Get the struct tag values
+        key := field.Tag("structs")
+        env := field.Tag("env")
+        
+        // Bind cobra flags to viper
+        _ = viper.BindPFlag(key, rootCmd.PersistentFlags().Lookup(key))
+        _ = viper.BindEnv(key, env)
+    }
 }
 ```
 
@@ -203,27 +165,24 @@ And last we use viper to bind config files to these parameters.
 ```go
 // readConfig a helper to read default from a default config object.
 func readConfig() (*config, error) {
-    cefaultsAsMap := structs.Map(defaultConfig)
+    // Create a map of the default config
+    defaultsAsMap := structs.Map(defaultConfig)
     
     // Set defaults
-    for key, value := range cefaultsAsMap {
+    for key, value := range defaultsAsMap {
         viper.SetDefault(key, value)
     }
     
     // Read config from file
     viper.SetConfigName("config")
     viper.AddConfigPath(".")
-    err := viper.ReadInConfig()
-    switch err.(type) {
-        case viper.ConfigFileNotFoundError:
-            fmt.Printf("%s\n", aurora.Yellow("Could not find a config file"))
-        default:
-            return nil, fmt.Errorf("config file invalid: %s \n", err)
+    if err := viper.ReadInConfig(); err == nil {
+        fmt.Println("Using config file:", viper.ConfigFileUsed())
     }
     
     // Unmarshal config into struct
     c := &config{}
-    err = viper.Unmarshal(c)
+    err := viper.Unmarshal(c)
     if err != nil {
         return nil, err
     }
@@ -232,13 +191,11 @@ func readConfig() (*config, error) {
 ```
 
 Before entering the application the config needs to be initialized. This can be done with the packages `init()` function.
-# TODO: maybe move init to description of cli.go
 ```go
 // configInit must be called from the packages' init() func
 func configInit() {
     cliFlags()
-    bind()
-    env()
+	bindFlagsAndEnv()
 }
 
 // init is called before main
@@ -268,97 +225,6 @@ func (c *config) String() string {
     cp := *c
     _ = conform.Strings(&cp)
     return litter.Sdump(cp)
-}
-```
-
-
-
-## Logging
-The cli package is a good starting point to instantiate a logger for your application.
-It supports logging to stdout, stderr in different formats and levels.
-This can be especially useful when you want to log in a more human-readable format when using in you local cli and a more machine-readable format when using in a CI/CD pipeline.
-
-```shell
-# output on you cli
-$ 2021-03-01T12:00:00.000Z [INFO]  cli_example: Hello World, someValue: 123, someOtherValue: 456
-```
-
-```shell
-# output on your CI/CD pipeline
-$ 2021-03-01T12:00:00.000Z [INFO]  cli_example: {"level":"info","message":"Hello World", "someValue": "123", "someOtherValue": "456"}
-```
-
-## Build
-I like to build my applications with a version number and a git commit hash. That way I can easily identify the version of my application.
-To do so I add the following build flags to my build command:
-
-```shell
-go build -ldflags="-s -w -X main.Version=${VERSION} -X main.CommitHash=${COMMIT_HASH}"
-```
-
-### Initialize logging
-To initialize logging we need to create the `loggingInit()` function.
-Let's create a new file called `log.go` and add the loggingInit function:
-
-```go
-package cli
-
-import (
-    "os"
-    
-    "github.com/go-logr/logr"
-    "github.com/go-logr/zapr"
-    "go.uber.org/zap"
-    "go.uber.org/zap/zapcore"
-)
-
-// This is the logger we can pass into services
-var log logr.Logger
-
-// logInit initializes the logger
-func logInit(verbosity int8, pretty bool) {
-    
-    // assure info logs start at 1
-    if verbosity != 0 {
-        verbosity = verbosity - 1
-    }
-    
-    // First, define our level-handling logic.
-    stdError := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-        return lvl >= zapcore.ErrorLevel
-    })
-    stdOutput := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-        return lvl >= zapcore.Level(-verbosity) && lvl < zapcore.ErrorLevel
-    })
-    
-    // High-priority output should also go to standard error, and low-priority
-    // output should also go to standard out.
-    consoleDebugging := zapcore.Lock(os.Stdout)
-    consoleErrors := zapcore.Lock(os.Stderr)
-    
-    consoleEncoder := zapcore.NewConsoleEncoder(zap.NewProductionEncoderConfig())
-    if pretty {
-        consoleEncoder = zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig())
-    }
-    
-    // Join the outputs, encoders, and level-handling functions into
-    // zapcore.Cores, then tee the four cores together.
-    core := zapcore.NewTee(
-        zapcore.NewCore(consoleEncoder, consoleErrors, stdError),
-        zapcore.NewCore(consoleEncoder, consoleDebugging, stdOutput),
-    )
-    
-    // multiline stacktrace option removed
-    options := []zap.Option{} // zap.AddStacktrace(stdError),
-    
-    if pretty {
-        options = append(options, zap.Development(), zap.AddStacktrace(stdError))
-    }
-    
-    // From a zapcore.Core, it's easy to construct a Logger.
-    logger := zap.New(core, options...)
-    
-    log = zapr.NewLogger(logger)
 }
 ```
 
@@ -450,4 +316,3 @@ func profilingInit(cpuProfile, memProfile bool) func() {
 ### Profiling with pprof
 To profile your application you need to start it with the `--cpuprofile` or `--memprofile` flag (or both).
 
-## 

@@ -31,6 +31,8 @@ The two main parts every CLI application should have are:
 - **Config**: The configuration of the application.
 - **Profiling**: The cpu and memory profiling of the application.
 
+You can find an example of a boilerplate that implements these two parts [here](https://github.com/benchkram/cli_example).
+
 ## Config
 Every CLI application should provide multiple ways to take parameters to ensure flexibility and ease-of-use for users.
 
@@ -325,13 +327,17 @@ if memProfile {
     })
 }
 ```
-### Conclusion
+## Conclusion
 In this post we have looked at how to load a config struct from different sources. We have also looked at how to profile
 an application and how to stop the profiling. We looked at the benefits of having this code in a separate cli package.
 The code for this post can be found [here](github.com/benchkram/cli_example).
 
 
-# Left out in this post
-- Version?
-- Redact?
-- Logging
+### Left out in this post
+A few things that I left out in this post are:
+- Version: adding a version and commit hash through ldflags
+- Redact: redacting sensitive information from the config
+- Logging: setting up a logger
+
+You can however find versioning and redact in the [example repo](github.com/benchkram/cli_example).
+Stay tuned for more posts from me on this topic.

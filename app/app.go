@@ -4,6 +4,7 @@ import "fmt"
 
 // Application is the interface for the application
 type Application interface {
+	Start() error
 	Version() string
 }
 
@@ -23,6 +24,15 @@ func NewApplication(version VersionInfo) Application {
 	return &app{
 		versionInfo: version,
 	}
+}
+
+func (a *app) Start() error {
+	fmt.Println("Starting application")
+	fmt.Println("Version: ", a.Version())
+
+	// TODO: Add your application logic here
+
+	return nil
 }
 
 // Version returns the version and commit hash

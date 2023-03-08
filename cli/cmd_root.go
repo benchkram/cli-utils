@@ -2,10 +2,7 @@ package cli
 
 import (
 	"cli_example/app"
-	"cli_example/server"
 	"fmt"
-	"github.com/benchkram/errz"
-
 	"github.com/spf13/cobra"
 )
 
@@ -17,7 +14,6 @@ var rootCmd = &cobra.Command{
 	Long:  "cli to start example server & client",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		readGlobalConfig()
-		logInit(int8(GlobalConfig.Verbosity), GlobalConfig.Pretty)
 		onStopProfiling = profilingInit(
 			GlobalConfig.CPUProfile,
 			GlobalConfig.MEMProfile,
@@ -26,13 +22,15 @@ var rootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		err := runRootJob()
 		// On the most outside function we only log error
-		errz.Log(err)
+		if err != nil {
+			fmt.Println(err)
+		}
 	},
 }
 
 // runRootJob is the actual job that is executed by the root command
 func runRootJob() (err error) {
-	log.Info("root job started", "version", Version, "commit", CommitHash)
+	GlobalConfig.Print()
 
 	// Create new app instance
 	newApp := app.NewApplication(app.VersionInfo{
@@ -40,14 +38,7 @@ func runRootJob() (err error) {
 		Commit:  CommitHash,
 	})
 
-	// Create new server instance
-	newServer := server.NewServer(
-		fmt.Sprintf("%s:%s", GlobalConfig.Host, GlobalConfig.Port),
-		newApp,
-	)
-
-	// Start server - blocking
-	err = newServer.Start()
+	newApp.Start()
 
 	return err
 }

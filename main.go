@@ -1,10 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"cli_example/cli"
-	"github.com/benchkram/errz"
 )
 
 // Version and CommitHash set in compile time through ldflags
@@ -23,7 +23,7 @@ func main() {
 	cli.CommitHash = CommitHash
 
 	if err := cli.Execute(); err != nil {
-		errz.Log(err)
+		fmt.Println(err)
 		os.Exit(1)
 	}
 }

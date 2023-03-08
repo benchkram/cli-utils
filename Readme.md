@@ -20,10 +20,10 @@ The cobra command will call the root command of our application.
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"cli_example/cli"
-	"github.com/benchkram/errz"
 )
 
 // Version and CommitHash set in compile time through ldflags
@@ -42,7 +42,7 @@ func main() {
 	cli.CommitHash = CommitHash
 
 	if err := cli.Execute(); err != nil {
-		errz.Log(err)
+		fmt.Println(err)
 		os.Exit(1)
 	}
 }
@@ -306,7 +306,6 @@ package cli
 import (
     "os"
     
-    "github.com/benchkram/errz"
     "github.com/go-logr/logr"
     "github.com/go-logr/zapr"
     "go.uber.org/zap"
@@ -360,9 +359,6 @@ func logInit(verbosity int8, pretty bool) {
     logger := zap.New(core, options...)
     
     log = zapr.NewLogger(logger)
-    
-    // Set the logger also for our error package
-    errz.WithLogger(log.WithCallDepth(2))
 }
 ```
 
@@ -382,8 +378,6 @@ package cli
 import (
     "os"
     "runtime/pprof"
-    
-    "github.com/benchkram/errz"
 )
 
 // File names for profiling output
@@ -411,11 +405,17 @@ func profilingInit(cpuProfile, memProfile bool) func() {
     
         // Create profiling file
         f, err := os.Create(_cpuprofile)
-        errz.Fatal(err)
+		if err != nil {
+			log.Error(err, "failed to create cpu profile file")
+            return stop
+		}
     
         // Start profiling
         err = pprof.StartCPUProfile(f)
-        errz.Log(err)
+		if err != nil {
+			log.Error(err, "failed to start cpu profile")
+            return stop
+		}
     
         // Add function to stop cpu profiling to doOnStop list
         doOnStop = append(doOnStop, func() {
@@ -430,7 +430,10 @@ func profilingInit(cpuProfile, memProfile bool) func() {
     
         // Create profiling file
         f, err := os.Create(_memprofile)
-        errz.Fatal(err)
+		if err != nil {
+			log.Error(err, "failed to create memory profile file")
+            return stop
+		}
     
         // Add function to stop memory profiling to doOnStop list
         doOnStop = append(doOnStop, func() {

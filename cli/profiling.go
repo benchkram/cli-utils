@@ -1,11 +1,10 @@
 package cli
 
 import (
+	"fmt"
 	"os"
 	"runtime/pprof"
 	"sync"
-
-	"github.com/benchkram/errz"
 )
 
 // File names for profiling output
@@ -29,36 +28,45 @@ func profilingInit(cpuProfile, memProfile bool) func() {
 	}
 
 	if cpuProfile {
-		log.Info("cpu profile enabled")
+		fmt.Println("cpu profile enabled")
 
 		// Create profiling file
 		f, err := os.Create(_cpuprofile)
-		errz.Fatal(err)
+		if err != nil {
+			fmt.Println("could not create cpu profile file")
+			return stop
+		}
 
 		// Start profiling
 		err = pprof.StartCPUProfile(f)
-		errz.Log(err)
+		if err != nil {
+			fmt.Println("could not start cpu profiling")
+			return stop
+		}
 
 		// Add function to stop cpu profiling to doOnStop list
 		doOnStop = append(doOnStop, func() {
 			pprof.StopCPUProfile()
 			_ = f.Close()
-			log.Info("cpu profile stopped")
+			fmt.Println("cpu profile stopped")
 		})
 	}
 
 	if memProfile {
-		log.Info("memory profile enabled")
+		fmt.Println("memory profile enabled")
 
 		// Create profiling file
 		f, err := os.Create(_memprofile)
-		errz.Fatal(err)
+		if err != nil {
+			fmt.Println("could not create memory profile file")
+			return stop
+		}
 
 		// Add function to stop memory profiling to doOnStop list
 		doOnStop = append(doOnStop, func() {
 			_ = pprof.WriteHeapProfile(f)
 			_ = f.Close()
-			log.Info("memory profile stopped")
+			fmt.Println("memory profile stopped")
 		})
 	}
 

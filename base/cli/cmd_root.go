@@ -10,7 +10,7 @@ import (
 // rootCmd represents the base command when called without any subcommands
 // we can attach subcommands to this command
 var rootCmd = &cobra.Command{
-	Use:   "cli_example",
+	Use:   "our_app",
 	Short: "cli to start example server & client",
 	Long:  "cli to start example server & client",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {

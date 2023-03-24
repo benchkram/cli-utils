@@ -36,12 +36,12 @@ var defaultConfig = config{
 
 Environment variable
 ```shell
-PARAM1="param from env" ./cli_example
+PARAM1="param from env" ./our_app
 ```
 
 Cli parameter
 ```shell
-./cli_example --param1="param from cli"
+./our_app --param1="param from cli"
 ```
 
 For profiling just add the parameters `cpuprofile` and/or `memprofile` to the application call. This will generate the profiling files `cpuprofile.pprof` and `memprofile.pprof` which can be inspected with [github.com/google/pprof](https://github.com/google/pprof)

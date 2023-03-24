@@ -32,10 +32,10 @@ var defaultConfig = config{
 
 Environment variable
 ```shell
-PARAM1="param from env" ./cli_example
+PARAM1="param from env" ./our_app
 ```
 
 Cli parameter
 ```shell
-./cli_example --param1="param from cli"
+./our_app --param1="param from cli"
 ```

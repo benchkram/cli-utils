@@ -1,4 +1,4 @@
-module cli_example
+module github.com/benchkram/cli_utils/base
 
 go 1.19
 

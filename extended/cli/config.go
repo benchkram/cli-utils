@@ -33,9 +33,9 @@ var defaultConfig = &config{
 }
 
 // configInit must be called from the packages' init() func
-func configInit() {
+func configInit() error {
 	cliFlags()
-	bindFlagsAndEnv()
+	return bindFlagsAndEnv()
 }
 
 // Create private data struct to hold config options.
@@ -63,16 +63,23 @@ func cliFlags() {
 }
 
 // bindFlagsAndEnv will assign the environment variables to the cli parameters
-func bindFlagsAndEnv() {
+func bindFlagsAndEnv() (err error) {
 	for _, field := range structs.Fields(&config{}) {
 		// Get the struct tag values
 		key := field.Tag("structs")
 		env := field.Tag("env")
 
 		// Bind cobra flags to viper
-		_ = viper.BindPFlag(key, rootCmd.PersistentFlags().Lookup(key))
-		_ = viper.BindEnv(key, env)
+		err = viper.BindPFlag(key, rootCmd.PersistentFlags().Lookup(key))
+		if err != nil {
+			return err
+		}
+		err = viper.BindEnv(key, env)
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 // Print the config object

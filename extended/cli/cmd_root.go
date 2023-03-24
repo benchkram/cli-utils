@@ -1,8 +1,8 @@
 package cli
 
 import (
-	"cli_example/app"
 	"fmt"
+	"github.com/benchkram/cli_utils/extended/app"
 	"github.com/spf13/cobra"
 )
 

@@ -1,2 +1,3 @@
 cli_example
 cpuprofile.pprof
+memprofile.pprof

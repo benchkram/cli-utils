@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 
-	"github.com/benchkram/cli_utils/base/app"
+	"github.com/benchkram/cli-utils/base/app"
 	"github.com/spf13/cobra"
 )
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/benchkram/cli_utils/extended/cli"
+	"github.com/benchkram/cli-utils/extended/cli"
 )
 
 // Version and CommitHash set in compile time through ldflags

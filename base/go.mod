@@ -1,4 +1,4 @@
-module github.com/benchkram/cli_utils/base
+module github.com/benchkram/cli-utils/base
 
 go 1.19
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/benchkram/cli_utils/base/cli"
+	"github.com/benchkram/cli-utils/base/cli"
 )
 
 func main() {

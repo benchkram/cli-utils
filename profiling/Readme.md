@@ -1,7 +1,7 @@
 # Golang Profiling Cli Boilerplate Example
 
 Simple example of how to profile a golang application which uses [spf13/cobra](github.com/spf13/cobra) for configuration.
-Checkout [profiling.go](profiling.go) on how to start and stop the profiling.
+Checkout [profiling.go](/profiling/cli/profiling.go) on how to start and stop the profiling.
 
 ## Usage
 App can take following parameters:

@@ -5,7 +5,6 @@ import "fmt"
 // Application is the interface for the application
 type Application interface {
 	Start() error
-	Hi() string
 }
 
 // app is the implementation of the application
@@ -19,13 +18,17 @@ func NewApplication() Application {
 
 func (a *app) Start() error {
 	fmt.Println("Starting application")
-	fmt.Println(a.Hi())
+	fmt.Println("Fib(40):", a.Fib(40))
 
 	// TODO: Add your application logic here
 
 	return nil
 }
 
-func (a *app) Hi() string {
-	return "Hi Mom!"
+// Fib returns nth fibonacci number
+func (a *app) Fib(n int) int {
+	if n <= 1 {
+		return n
+	}
+	return a.Fib(n-1) + a.Fib(n-2)
 }

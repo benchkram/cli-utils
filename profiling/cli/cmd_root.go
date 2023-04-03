@@ -13,7 +13,6 @@ var rootCmd = &cobra.Command{
 	Short: "cli to start example server & client",
 	Long:  "cli to start example server & client",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		readGlobalConfig()
 		onStopProfiling = profilingInit()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
@@ -27,8 +26,10 @@ var rootCmd = &cobra.Command{
 
 // runRootJob is the actual job that is executed by the root command
 func runRootJob() (err error) {
-	// Print global config
-	GlobalConfig.Print()
+	// Print the config
+	fmt.Printf(
+		"Config: {\n\tCPUProfile: %t\n\tCPUProfileFile: %s\n\tMEMProfile: %t\n\tMEMProfileFile: %s\n}\n",
+		CPUProfile, CPUProfileFile, MEMProfile, MEMProfileFile)
 
 	// Create new app instance
 	newApp := app.NewApplication()

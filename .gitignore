@@ -1,5 +1,9 @@
 cli_example
 our_app
 cpuprofile.pprof
+cpuprofile.prof
+cpu.prof
 memprofile.pprof
+memprofile.prof
+mem.prof
 .idea

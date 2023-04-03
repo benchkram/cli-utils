@@ -21,11 +21,11 @@ func profilingInit() func() {
 		}
 	}
 
-	if CPUProfile {
+	if cpuProfile {
 		fmt.Println("cpu profile enabled")
 
 		// Create profiling file
-		f, err := os.Create(CPUProfileFile)
+		f, err := os.Create(cpuProfileFile)
 		if err != nil {
 			fmt.Println("could not create cpu profile file")
 			return stop
@@ -46,11 +46,11 @@ func profilingInit() func() {
 		})
 	}
 
-	if MEMProfile {
+	if memProfile {
 		fmt.Println("memory profile enabled")
 
 		// Create profiling file
-		f, err := os.Create(MEMProfileFile)
+		f, err := os.Create(memProfileFile)
 		if err != nil {
 			fmt.Println("could not create memory profile file")
 			return stop

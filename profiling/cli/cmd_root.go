@@ -29,7 +29,7 @@ func runRootJob() (err error) {
 	// Print the config
 	fmt.Printf(
 		"Config: {\n\tCPUProfile: %t\n\tCPUProfileFile: %s\n\tMEMProfile: %t\n\tMEMProfileFile: %s\n}\n",
-		CPUProfile, CPUProfileFile, MEMProfile, MEMProfileFile)
+		cpuProfile, cpuProfileFile, memProfile, memProfileFile)
 
 	// Create new app instance
 	newApp := app.NewApplication()
